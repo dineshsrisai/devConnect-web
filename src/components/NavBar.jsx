@@ -3,20 +3,26 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";
 import { removeUser } from "../utils/userSlice";
+import { addFeed } from "../utils/feedSlice";
+import { addConnections } from "../utils/connections";
+import { addRequests } from "../utils/requests";
 
 const NavBar = () => {
   const user = useSelector((store) => store.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const handleLogout = async () => {
     try {
       await axios.post(BASE_URL + "/logout", {}, { withCredentials: true });
-      dispatch(removeUser());
-      navigate("/login");
     } catch (e) {
-      dispatch(removeUser());
-      navigate("/login");
       console.log(e);
+    } finally {
+      dispatch(removeUser());
+      dispatch(addFeed(null));
+      dispatch(addConnections(null));
+      dispatch(addRequests(null));
+      navigate("/login");
     }
   };
 
@@ -52,7 +58,6 @@ const NavBar = () => {
                   <li>
                     <Link to="/profile" className="justify-between">
                       Profile
-                      {/* <span className="badge">New</span> */}
                     </Link>
                   </li>
                   <li>

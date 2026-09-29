@@ -37,7 +37,14 @@ const EditProfile = ({ user }) => {
         setShowToast(false);
       }, 3000);
     } catch (e) {
-      setError("Invalid Edit", e);
+      // FIX: setError() only takes one argument (it's a state setter), so
+      // the previous call — setError("Invalid Edit", e) — silently dropped
+      // the actual error and always showed the same generic string no
+      // matter what went wrong server-side. Surface the server's message
+      // when there is one.
+      setError(
+        e?.response?.data?.message || e?.response?.data || "Invalid Edit"
+      );
     }
   };
 

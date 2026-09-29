@@ -12,7 +12,7 @@ const Login = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  const [isLoginForm, setIsLoginForm] = useState(true);
+  const [isSignUpForm, setIsSignUpForm] = useState(false);
 
   const [error, setError] = useState("");
 
@@ -55,9 +55,9 @@ const Login = () => {
       <div className="card bg-base-300 w-96 shadow-sm">
         <div className="card-body">
           <h2 className="card-title justify-center">
-            {!isLoginForm ? "Login" : "Sign Up"}
+            {isSignUpForm ? "Sign Up" : "Login"}
           </h2>
-          {isLoginForm && (
+          {isSignUpForm && (
             <>
               {" "}
               <div className="form-control">
@@ -122,18 +122,18 @@ const Login = () => {
           <div className="card-actions justify-center pt-3">
             <button
               className="btn btn-info rounded-lg"
-              onClick={isLoginForm ?  handleSignUp : handleLogin}
+              onClick={isSignUpForm ? handleSignUp : handleLogin}
             >
-              {!isLoginForm ? "Login" : "Sign Up"}
+              {isSignUpForm ? "Sign Up" : "Login"}
             </button>
           </div>
           <p
             className="cursor-pointer mx-auto py-2"
-            onClick={() => setIsLoginForm((value) => !value)}
+            onClick={() => setIsSignUpForm((value) => !value)}
           >
-            {!isLoginForm
-              ? "New User? SignUp Here"
-              : "Existing User? Login Here"}
+            {isSignUpForm
+              ? "Existing User? Login Here"
+              : "New User? SignUp Here"}
           </p>
         </div>
       </div>

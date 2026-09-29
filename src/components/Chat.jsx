@@ -46,18 +46,13 @@ const Chat = () => {
 
     const socket = createSocketConnection();
     socketRef.current = socket;
-
-    socket.emit("joinChat", {
-      firstName: user?.firstName,
-      userId,
-      targetUserId,
-    });
+    socket.emit("joinChat", { targetUserId });
 
     socket.on("messageReceived", (incomingMsg) => {
       setMessages((prev) => [
         ...prev,
         {
-          senderId: incomingMsg.senderId || incomingMsg.userId,
+          senderId: incomingMsg.senderId,
           firstName: incomingMsg.firstName,
           text: incomingMsg.text,
         },
@@ -69,16 +64,13 @@ const Chat = () => {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [userId, targetUserId, user?.firstName]);
+  }, [userId, targetUserId]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
     const trimmedMessage = newMessage.trim();
     if (!trimmedMessage || !socketRef.current) return;
-
     socketRef.current.emit("sendMessage", {
-      senderId: userId,
-      firstName: user?.firstName,
       targetUserId,
       text: trimmedMessage,
     });
@@ -94,19 +86,16 @@ const Chat = () => {
 
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
         {messages.map((msg, idx) => {
-          // Resolve sender ID regardless of how the backend sends it (string vs ObjectId)
           const msgSenderId =
             typeof msg.senderId === "object"
               ? msg.senderId?._id
               : msg.senderId || msg.userId;
 
-          // Determine if the current logged-in user sent this message
           const isSender =
             msgSenderId &&
             userId &&
             msgSenderId.toString() === userId.toString();
 
-          // Safely extract the first name for both sender and receiver
           const displayFirstName = isSender
             ? user?.firstName
             : msg.firstName || msg.senderId?.firstName || "User";
@@ -116,7 +105,6 @@ const Chat = () => {
               key={msg._id || idx}
               className={`chat ${isSender ? "chat-end" : "chat-start"}`}
             >
-              {/* Display the First Name on top of the bubble */}
               <div className="chat-header text-xs opacity-70 mb-1">
                 {displayFirstName}
               </div>
