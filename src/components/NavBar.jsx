@@ -18,11 +18,6 @@ const NavBar = () => {
     } catch (e) {
       console.log(e);
     } finally {
-      // FIX: previously only removeUser() was dispatched. Logging out and
-      // logging in as someone else in the same tab still showed the
-      // PREVIOUS user's cached feed/connections/requests, because Feed's
-      // getFeed() (and similar effects) bail out early when data already
-      // exists in the store. Reset every slice on logout, not just user.
       dispatch(removeUser());
       dispatch(addFeed(null));
       dispatch(addConnections(null));
@@ -36,7 +31,7 @@ const NavBar = () => {
       <div className="navbar bg-base-300 shadow-sm">
         <div className="flex-1">
           <Link to="/" className="btn btn-ghost text-xl">
-            DevTinder
+            DevConnect
           </Link>
         </div>
         {user && (

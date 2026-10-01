@@ -47,10 +47,6 @@ const Chat = () => {
     const socket = createSocketConnection();
     socketRef.current = socket;
 
-    // FIX: only targetUserId is sent now. The backend identifies *us* from
-    // the authenticated socket connection (the cookie, verified in
-    // backend/utils/socket.js), not from a client-supplied userId/
-    // firstName, which could previously be set to anything by the client.
     socket.emit("joinChat", { targetUserId });
 
     socket.on("messageReceived", (incomingMsg) => {
@@ -76,10 +72,6 @@ const Chat = () => {
     const trimmedMessage = newMessage.trim();
     if (!trimmedMessage || !socketRef.current) return;
 
-    // FIX: senderId/firstName are no longer sent — the server derives both
-    // from the authenticated socket and would ignore them anyway now, but
-    // sending them was misleading (it looked like the client controlled
-    // identity, which it no longer does).
     socketRef.current.emit("sendMessage", {
       targetUserId,
       text: trimmedMessage,
@@ -96,19 +88,16 @@ const Chat = () => {
 
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
         {messages.map((msg, idx) => {
-          // Resolve sender ID regardless of how the backend sends it (string vs ObjectId)
           const msgSenderId =
             typeof msg.senderId === "object"
               ? msg.senderId?._id
               : msg.senderId || msg.userId;
 
-          // Determine if the current logged-in user sent this message
           const isSender =
             msgSenderId &&
             userId &&
             msgSenderId.toString() === userId.toString();
 
-          // Safely extract the first name for both sender and receiver
           const displayFirstName = isSender
             ? user?.firstName
             : msg.firstName || msg.senderId?.firstName || "User";

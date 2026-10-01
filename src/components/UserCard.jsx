@@ -3,13 +3,6 @@ import { BASE_URL } from "../utils/constants";
 import { useDispatch } from "react-redux";
 import { removeFeed } from "../utils/feedSlice";
 
-// FIX: added `className` and `hideActions` props. Previously this component
-// was built only for the Feed use case (a swipeable card with working
-// Ignore/Interested buttons) and EditProfile.jsx reused it as a read-only
-// preview without either of these — so the preview showed two buttons that
-// made no sense on your own profile (and silently failed if clicked, since
-// there's no _id on the preview object), and a `className` EditProfile
-// passed in to size the card was being silently dropped.
 const UserCard = ({ user, className = "", hideActions = false }) => {
   const dispatch = useDispatch();
   if (!user) return null;

@@ -13,11 +13,6 @@ const Login = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  // FIX: renamed from the original `isLoginForm`, which was inverted — it
-  // defaulted to `true` yet that state actually rendered the *Sign Up*
-  // fields, and the "Login"/"Sign Up" button label and heading used `!` to
-  // compensate. `isSignUpForm` now means exactly what it says, and the
-  // page opens on the Login view by default (previously Sign Up).
   const [isSignUpForm, setIsSignUpForm] = useState(false);
 
   const [error, setError] = useState("");
