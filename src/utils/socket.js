@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
-import { BASE_URL } from "./constants";
 
 export const createSocketConnection = () => {
-  return io(BASE_URL, { withCredentials: true });
+  const socketUrl = import.meta.env.VITE_API_URL || window.location.origin;
+  return io(socketUrl, { withCredentials: true });
 };

@@ -7,7 +7,13 @@ import { addUser } from "../utils/userSlice";
 
 const EditProfile = ({ user }) => {
   const [firstName, setFirstName] = useState(user.firstName);
-  const [lastName, setLastName] = useState(user.lastName);
+  // FIX: `lastName` is optional in the schema and can be undefined for an
+  // existing user. useState(undefined) makes the <input> start as an
+  // uncontrolled element (no `value`), and the moment the user types,
+  // setLastName gives it a real string — React logs "a component is
+  // changing an uncontrolled input to be controlled." Defaulting to ""
+  // keeps the input controlled from the first render.
+  const [lastName, setLastName] = useState(user.lastName || "");
   const [photoUrl, setPhotoUrl] = useState(user.photoUrl);
   const [age, setAge] = useState(user.age);
   const [about, setAbout] = useState(user.about);
@@ -20,31 +26,55 @@ const EditProfile = ({ user }) => {
   const saveProfile = async () => {
     setError("");
     try {
-      const res = await axios.patch(
-        BASE_URL + "/profile/edit",
-        {
-          firstName,
-          lastName,
-          photoUrl,
-          age,
-          about,
-        },
-        { withCredentials: true },
-      );
+      // FIX: age starts blank for any user who never set one (signup
+      // doesn't collect it), and the number input's value becomes an empty
+      // string "" whenever it's cleared. Sending age: "" made Mongoose cast
+      // it to Number("") -> 0, which fails the schema's `min: 5` rule — and
+      // since .save() validates the WHOLE document at once, that one bad
+      // field was silently rejecting every other change too (firstName,
+      // about, photoUrl — all of it), not just age.
+      //
+      // Send age as a number when provided, and null when cleared so an
+      // existing age can actually be removed.
+      const payload = { firstName, lastName, photoUrl, about };
+      if (age === "" || age === null || age === undefined) {
+        payload.age = null;
+      } else {
+        const numericAge = Number(age);
+        if (!Number.isNaN(numericAge)) {
+          payload.age = numericAge;
+        }
+      }
+
+      const res = await axios.patch(BASE_URL + "/profile/edit", payload, {
+        withCredentials: true,
+      });
       dispatch(addUser(res?.data?.data));
       setShowToast(true);
       setTimeout(() => {
         setShowToast(false);
       }, 3000);
     } catch (e) {
-      // FIX: setError() only takes one argument (it's a state setter), so
-      // the previous call — setError("Invalid Edit", e) — silently dropped
-      // the actual error and always showed the same generic string no
-      // matter what went wrong server-side. Surface the server's message
-      // when there is one.
-      setError(
-        e?.response?.data?.message || e?.response?.data || "Invalid Edit"
-      );
+      // FIX: previously this always fell back to the generic string
+      // "Invalid Edit" whenever the server's response didn't match the
+      // expected shape — which is exactly what happens when there's NO
+      // response at all (backend not running, wrong port, CORS blocking
+      // the request). That made a connection failure look identical to a
+      // validation failure, with no way to tell them apart from the UI.
+      if (!e.response) {
+        // The request never reached the server, or no response came back —
+        // check that the backend is actually running and that BASE_URL in
+        // utils/constants.js points at the right host and port.
+        setError(
+          "Could not reach the API through the development proxy. Confirm the backend is running on port 5000, then restart the frontend dev server.",
+        );
+      } else {
+        setError(
+          e.response.data?.message ||
+            (typeof e.response.data === "string" ? e.response.data : null) ||
+            `Server returned an error (status ${e.response.status}).`,
+        );
+      }
     }
   };
 
@@ -91,6 +121,8 @@ const EditProfile = ({ user }) => {
                   <legend className="fieldset-legend">Age</legend>
                   <input
                     type="number"
+                    min="5"
+                    max="100"
                     className="input input-info rounded-lg"
                     value={age || ""}
                     onChange={(e) => setAge(e.target.value)}
@@ -125,6 +157,7 @@ const EditProfile = ({ user }) => {
           <UserCard
             user={{ firstName, lastName, photoUrl, age, about }}
             className="h-full w-full"
+            hideActions
           />
         </div>
       </div>

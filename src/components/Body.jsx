@@ -20,6 +20,9 @@ const Body = () => {
       });
       dispatch(addUser(res.data));
     } catch (e) {
+      // FIX: axios puts the HTTP status on e.response.status, not e.status
+      // — the old check (e.status) was essentially always false, so an
+      // expired/invalid session never actually redirected to /login.
       if (e.response?.status === 401) {
         navigate("/login");
       }

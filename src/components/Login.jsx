@@ -1,23 +1,31 @@
 import { useState } from "react";
 import axios from "axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addUser } from "../utils/userSlice";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";
 
 const Login = () => {
+  const user = useSelector((store) => store.user);
   const [emailId, setEmailId] = useState("");
   const [password, setPassword] = useState("");
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
+  // FIX: renamed from the original `isLoginForm`, which was inverted — it
+  // defaulted to `true` yet that state actually rendered the *Sign Up*
+  // fields, and the "Login"/"Sign Up" button label and heading used `!` to
+  // compensate. `isSignUpForm` now means exactly what it says, and the
+  // page opens on the Login view by default (previously Sign Up).
   const [isSignUpForm, setIsSignUpForm] = useState(false);
 
   const [error, setError] = useState("");
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  if (user) return <Navigate to="/" replace />;
 
   const handleLogin = async () => {
     try {
