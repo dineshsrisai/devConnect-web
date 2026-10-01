@@ -7,12 +7,6 @@ import { addUser } from "../utils/userSlice";
 
 const EditProfile = ({ user }) => {
   const [firstName, setFirstName] = useState(user.firstName);
-  // FIX: `lastName` is optional in the schema and can be undefined for an
-  // existing user. useState(undefined) makes the <input> start as an
-  // uncontrolled element (no `value`), and the moment the user types,
-  // setLastName gives it a real string — React logs "a component is
-  // changing an uncontrolled input to be controlled." Defaulting to ""
-  // keeps the input controlled from the first render.
   const [lastName, setLastName] = useState(user.lastName || "");
   const [photoUrl, setPhotoUrl] = useState(user.photoUrl);
   const [age, setAge] = useState(user.age);
@@ -26,20 +20,8 @@ const EditProfile = ({ user }) => {
   const saveProfile = async () => {
     setError("");
     try {
-      // FIX: age starts blank for any user who never set one (signup
-      // doesn't collect it), and the number input's value becomes an empty
-      // string "" whenever it's cleared. Sending age: "" made Mongoose cast
-      // it to Number("") -> 0, which fails the schema's `min: 5` rule — and
-      // since .save() validates the WHOLE document at once, that one bad
-      // field was silently rejecting every other change too (firstName,
-      // about, photoUrl — all of it), not just age.
-      //
-      // Send age as a number when provided, and null when cleared so an
-      // existing age can actually be removed.
       const payload = { firstName, lastName, photoUrl, about };
-      if (age === "" || age === null || age === undefined) {
-        payload.age = null;
-      } else {
+      if (age !== "" && age !== null && age !== undefined) {
         const numericAge = Number(age);
         if (!Number.isNaN(numericAge)) {
           payload.age = numericAge;
@@ -55,18 +37,9 @@ const EditProfile = ({ user }) => {
         setShowToast(false);
       }, 3000);
     } catch (e) {
-      // FIX: previously this always fell back to the generic string
-      // "Invalid Edit" whenever the server's response didn't match the
-      // expected shape — which is exactly what happens when there's NO
-      // response at all (backend not running, wrong port, CORS blocking
-      // the request). That made a connection failure look identical to a
-      // validation failure, with no way to tell them apart from the UI.
       if (!e.response) {
-        // The request never reached the server, or no response came back —
-        // check that the backend is actually running and that BASE_URL in
-        // utils/constants.js points at the right host and port.
         setError(
-          "Could not reach the API through the development proxy. Confirm the backend is running on port 5000, then restart the frontend dev server.",
+          "Could not reach the server. Is the backend running, and does BASE_URL point to the right address?",
         );
       } else {
         setError(
